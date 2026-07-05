@@ -265,37 +265,38 @@ const starters=["🦊","🦦","🐼","🦉"];
 /* ---------------- GENERATORS ----------------
    Each returns {skill,type:'mc'|'grid',qhtml,answer,hint,steps[]}          */
 const G={};
+function tiers(d,vals){var i=Math.max(1,Math.min(vals.length,Math.round(d)));return vals[i-1];}
 
 /* Integers ---------------------------------------------------------------*/
-G.int_add=(d)=>{const R=d===1?9:d===2?20:50;let a=nz(R),b=nz(R);const ans=a+b;
+G.int_add=(d)=>{const R=tiers(d,[9,14,20,30,45,60]);let a=nz(R),b=nz(R);const ans=a+b;
   return {type:"mc",qhtml:sgn(a)+" + "+sgn(b)+" = ?",answer:ans,
     ...mc(ans,[a-b,-a+b,-(a+b),ans+ (a>0?1:-1), ans-2]),
     hint:"Same signs → add and keep the sign. Different signs → subtract and take the sign of the bigger number.",
     steps:["Signs "+(Math.sign(a)===Math.sign(b)?"match, so add the values and keep the sign.":"differ, so subtract the smaller size from the larger and use that sign."),
            sgn(a)+" + "+sgn(b)+" = "+ans]};};
-G.int_sub=(d)=>{const R=d===1?9:d===2?20:50;let a=nz(R),b=nz(R);const ans=a-b;
+G.int_sub=(d)=>{const R=tiers(d,[9,14,20,30,45,60]);let a=nz(R),b=nz(R);const ans=a-b;
   return {type:"mc",qhtml:sgn(a)+" − "+sgn(b)+" = ?",answer:ans,
     ...mc(ans,[a+b,b-a,-(a-b),ans+2,ans-1]),
     hint:"Subtracting is adding the opposite: a − b = a + (−b).",
     steps:["Add the opposite: "+sgn(a)+" + "+sgn(-b),
            "= "+ans]};};
-G.int_mul=(d)=>{const R=d===1?9:d===2?12:15;let a=nz(R),b=nz(R);const ans=a*b;
+G.int_mul=(d)=>{const R=tiers(d,[9,10,12,14,16,20]);let a=nz(R),b=nz(R);const ans=a*b;
   return {type:"mc",qhtml:sgn(a)+" × "+sgn(b)+" = ?",answer:ans,
     ...mc(ans,[-ans,a+b,ans+a,ans-b]),
     hint:"Two same signs → positive. Two different signs → negative.",
     steps:[(Math.sign(a)===Math.sign(b)?"Same signs → positive.":"Different signs → negative."),
            Math.abs(a)+" × "+Math.abs(b)+" = "+Math.abs(ans)+", so the answer is "+ans+"."]};};
-G.int_div=(d)=>{const R=d===1?8:d===2?12:15;let b=nz(R),q=nz(R);const a=b*q;const ans=q;
+G.int_div=(d)=>{const R=tiers(d,[8,10,12,14,16,20]);let b=nz(R),q=nz(R);const a=b*q;const ans=q;
   return {type:"mc",qhtml:sgn(a)+" ÷ "+sgn(b)+" = ?",answer:ans,
     ...mc(ans,[-ans,ans+1,ans-1,ans+2]),
     hint:"Same signs → positive, different signs → negative — just like multiplying.",
     steps:[(Math.sign(a)===Math.sign(b)?"Same signs → positive.":"Different signs → negative."),
            Math.abs(a)+" ÷ "+Math.abs(b)+" = "+Math.abs(ans)]};};
-G.int_abs=(d)=>{const v=nz(d===1?12:30);const ans=Math.abs(v);
+G.int_abs=(d)=>{const v=nz(tiers(d,[12,18,25,35,50,70]));const ans=Math.abs(v);
   return {type:"mc",qhtml:"| "+v+" | = ?",answer:ans,...mc(ans,[-ans,v,ans+1,ans-1]),
     hint:"Absolute value = distance from 0. It is never negative.",
     steps:["The distance of "+v+" from 0 is "+ans+"."]};};
-G.int_order=(d)=>{const parts=[nz(9),nz(9),nz(9)];const a=parts[0],b=parts[1],c=parts[2];
+G.int_order=(d)=>{const R=tiers(d,[9,10,12,15,18,22]);const a=nz(R),b=nz(R),c=nz(R);
   const ans=a+b*c;
   return {type:"mc",qhtml:sgn(a)+" + "+sgn(b)+" × "+sgn(c)+" = ?",answer:ans,
     ...mc(ans,[(a+b)*c,ans+ b, a-b*c, ans-1]),
@@ -304,7 +305,7 @@ G.int_order=(d)=>{const parts=[nz(9),nz(9),nz(9)];const a=parts[0],b=parts[1],c=
            "Then add: "+sgn(a)+" + "+sgn(b*c)+" = "+ans]};};
 
 /* Decimals ---------------------------------------------------------------*/
-function dec(d){return (rand(1,d===1?9:d===2?99:999)/(d===1?10:100));}
+function dec(d){return rand(1,tiers(d,[80,150,300,600,999,1800]))/100;}
 G.dec_add=(d)=>{const a=dec(d),b=dec(d);const ans=Math.round((a+b)*100)/100;
   return {type:"grid",qhtml:a+" + "+b+" = ?",answer:ans,
     hint:"Line up the decimal points, then add. Bring the point straight down.",
@@ -313,12 +314,12 @@ G.dec_sub=(d)=>{let a=dec(d),b=dec(d);if(b>a)[a,b]=[b,a];const ans=Math.round((a
   return {type:"grid",qhtml:a+" − "+b+" = ?",answer:ans,
     hint:"Line up the decimal points and subtract, borrowing as usual.",
     steps:["Line up decimals.","Subtract: "+ans]};};
-G.dec_mul=(d)=>{const a=(rand(11,d===1?29:99)/10),b=(rand(2,9)/(d===1?1:10));
+G.dec_mul=(d)=>{const a=(rand(11,tiers(d,[29,49,79,120,180,260]))/10),b=(rand(2,9)/(Math.round(d)<=1?1:10));
   const ans=Math.round((a*b)*100)/100;
   return {type:"grid",qhtml:a+" × "+b+" = ?",answer:ans,
     hint:"Multiply ignoring the points, then count total decimal places and place the point.",
     steps:["Multiply as whole numbers.","Count decimal places in both factors, then place the point → "+ans]};};
-G.dec_round=(d)=>{const v=rand(1000,9999)/100;const ans=Math.round(v*10)/10;
+G.dec_round=(d)=>{const v=rand(100,tiers(d,[999,1500,2500,5000,9999,20000]))/100;const ans=Math.round(v*10)/10;
   return {type:"mc",qhtml:"Round "+v+" to the nearest tenth.",answer:ans,
     ...mc(ans,[Math.floor(v*10)/10,Math.ceil(v),Math.round(v),Math.round(v*10)/10+0.1]),
     hint:"Look at the hundredths digit: 5 or more rounds up, 4 or less rounds down.",
@@ -326,7 +327,7 @@ G.dec_round=(d)=>{const v=rand(1000,9999)/100;const ans=Math.round(v*10)/10;
 
 /* Fractions --------------------------------------------------------------*/
 function fpair(max){const d=rand(2,max);let n=rand(1,d-1);return [n,d];}
-G.fr_add=(d)=>{const D=d===1?[2,3,4,5,6]:[3,4,5,6,8,10,12];let d1=pick(D),d2=pick(D);
+G.fr_add=(d)=>{const D=tiers(d,[[2,3,4],[2,3,4,5,6],[3,4,5,6,8],[3,4,5,6,8,10],[4,5,6,8,9,10,12],[5,6,7,8,9,10,12,15]]);let d1=pick(D),d2=pick(D);
   let n1=rand(1,d1-1),n2=rand(1,d2-1);
   let num=n1*d2+n2*d1, den=d1*d2;[num,den]=simp(num,den);
   return {type:"mc",qhtml:fhtml(n1,d1)+" + "+fhtml(n2,d2)+" = ?",answer:fracStr(num,den),
@@ -334,30 +335,29 @@ G.fr_add=(d)=>{const D=d===1?[2,3,4,5,6]:[3,4,5,6,8,10,12];let d1=pick(D),d2=pic
     hint:"Find a common denominator, rename both fractions, then add the numerators.",
     steps:["Common denominator of "+d1+" and "+d2+" → "+(d1*d2)+" (or smaller).",
            "Add numerators, then simplify → "+fracStr(num,den)]};};
-G.fr_sub=(d)=>{const D=d===1?[2,3,4,6]:[3,4,5,6,8,12];let d1=pick(D),d2=pick(D);
+G.fr_sub=(d)=>{const D=tiers(d,[[2,3,4],[2,3,4,6],[3,4,5,6],[3,4,5,6,8],[4,5,6,8,10,12],[5,6,7,8,9,12]]);let d1=pick(D),d2=pick(D);
   let n1=rand(1,d1-1),n2=rand(1,d2-1);let num=n1*d2-n2*d1,den=d1*d2;
   if(num<0){num=-num;} [num,den]=simp(num,den);
-  // ensure first >= second by swapping display if needed
   if(n1*d2 < n2*d1){[n1,d1,n2,d2]=[n2,d2,n1,d1];}
   num=Math.abs(n1*d2-n2*d1);den=d1*d2;[num,den]=simp(num,den);
   return {type:"mc",qhtml:fhtml(n1,d1)+" − "+fhtml(n2,d2)+" = ?",answer:fracStr(num,den),
     ...mcFrac(num,den),
     hint:"Common denominator first, then subtract the numerators, then simplify.",
     steps:["Rename with a common denominator.","Subtract numerators and simplify → "+fracStr(num,den)]};};
-G.fr_mul=(d)=>{let[n1,d1]=fpair(d===1?6:10),[n2,d2]=fpair(d===1?6:10);
+G.fr_mul=(d)=>{let[n1,d1]=fpair(tiers(d,[6,7,8,9,11,13])),[n2,d2]=fpair(tiers(d,[6,7,8,9,11,13]));
   let num=n1*n2,den=d1*d2;[num,den]=simp(num,den);
   return {type:"mc",qhtml:fhtml(n1,d1)+" × "+fhtml(n2,d2)+" = ?",answer:fracStr(num,den),
     ...mcFrac(num,den),
     hint:"Multiply straight across: tops × tops and bottoms × bottoms. Then simplify.",
     steps:["Numerators: "+n1+"×"+n2+" = "+(n1*n2),"Denominators: "+d1+"×"+d2+" = "+(d1*d2),"Simplify → "+fracStr(num,den)]};};
-G.fr_div=(d)=>{let[n1,d1]=fpair(d===1?6:9),[n2,d2]=fpair(d===1?6:9);
+G.fr_div=(d)=>{let[n1,d1]=fpair(tiers(d,[6,7,8,9,10,12])),[n2,d2]=fpair(tiers(d,[6,7,8,9,10,12]));
   let num=n1*d2,den=d1*n2;[num,den]=simp(num,den);
   return {type:"mc",qhtml:fhtml(n1,d1)+" ÷ "+fhtml(n2,d2)+" = ?",answer:fracStr(num,den),
     ...mcFrac(num,den),
     hint:"Keep, Change, Flip: keep the first, change ÷ to ×, flip the second fraction.",
     steps:["Flip the divisor: ÷ "+fracStr(n2,d2)+" → × "+fracStr(d2,n2),
            "Multiply across and simplify → "+fracStr(num,den)]};};
-G.fr_simp=(d)=>{const g=rand(2,d===1?4:9);const[n,dn]=fpair(d===1?6:9);const N=n*g,D=dn*g;const[sn,sd]=simp(N,D);
+G.fr_simp=(d)=>{const g=rand(2,tiers(d,[3,4,5,6,8,9]));const[n,dn]=fpair(tiers(d,[6,7,8,9,10,12]));const N=n*g,D=dn*g;const[sn,sd]=simp(N,D);
   return {type:"mc",qhtml:"Write "+fhtml(N,D)+" in simplest form.",answer:fracStr(sn,sd),
     ...mcFrac(sn,sd),
     hint:"Divide the top and bottom by their greatest common factor.",
@@ -374,85 +374,85 @@ function mcFrac(num,den){const a=fracStr(num,den);const pool=[];
   return mc(a,pool);}
 
 /* Expressions ------------------------------------------------------------*/
-G.ex_eval=(d)=>{const x=nz(d===1?6:10);const a=rand(2,d===1?5:9),b=rand(1,d===1?9:20);
+G.ex_eval=(d)=>{const x=nz(tiers(d,[6,8,10,12,15,20]));const a=rand(2,tiers(d,[5,6,7,8,10,12])),b=rand(1,tiers(d,[9,14,20,28,40,55]));
   const ans=a*x+b;
   return {type:"grid",qhtml:"Evaluate "+a+"x + "+b+" when x = "+x+".",answer:ans,
     hint:"Substitute the value in for x, then follow order of operations.",
     steps:["Replace x: "+a+"("+x+") + "+b,"= "+(a*x)+" + "+b+" = "+ans]};};
-G.ex_like=(d)=>{const a=rand(2,7),b=rand(2,7),c=rand(1,9),e=rand(1,9);
+G.ex_like=(d)=>{const M=tiers(d,[7,8,9,10,12,14]),Mc=tiers(d,[9,12,15,20,25,30]);const a=rand(2,M),b=rand(2,M),c=rand(1,Mc),e=rand(1,Mc);
   const cx=a+b, con=c+e;
   return {type:"mc",qhtml:"Simplify: "+a+"x + "+c+" + "+b+"x + "+e,answer:cx+"x + "+con,
     ...mc(cx+"x + "+con,[(a*b)+"x + "+con,cx+"x + "+(c*e),(cx+1)+"x + "+con,cx+"x + "+(con+1)]),
     hint:"Combine like terms: add the x-terms together, and the plain numbers together.",
     steps:["x-terms: "+a+"x + "+b+"x = "+cx+"x","numbers: "+c+" + "+e+" = "+con,"→ "+cx+"x + "+con]};};
-G.ex_dist=(d)=>{const a=rand(2,d===1?5:8),b=rand(1,9),c=rand(1,9);
+G.ex_dist=(d)=>{const a=rand(2,tiers(d,[5,6,7,8,10,12])),b=rand(1,tiers(d,[9,12,15,20,25,35]));
   return {type:"mc",qhtml:"Expand: "+a+"("+"x + "+b+")",answer:a+"x + "+(a*b),
     ...mc(a+"x + "+(a*b),["x + "+(a*b),a+"x + "+b,(a)+"x + "+(a+b),(a+1)+"x + "+(a*b)]),
     hint:"Distribute: multiply the outside number by EACH term inside the parentheses.",
     steps:[a+"·x = "+a+"x", a+"·"+b+" = "+(a*b), "→ "+a+"x + "+(a*b)]};};
 
 /* Equations --------------------------------------------------------------*/
-G.eq_one=(d)=>{const t=pick(["+","−","×"]);const x=nz(d===1?9:15);let b,q,disp,ans=x;
-  if(t==="+"){b=rand(1,d===1?12:30);disp="x + "+b+" = "+(x+b);}
-  else if(t==="−"){b=rand(1,d===1?12:30);disp="x − "+b+" = "+(x-b);}
-  else{b=rand(2,9);disp=b+"x = "+(b*x);}
+G.eq_one=(d)=>{const t=pick(["+","−","×"]);const x=nz(tiers(d,[9,12,15,18,22,30]));let b,q,disp,ans=x;
+  if(t==="+"){b=rand(1,tiers(d,[12,20,30,40,55,80]));disp="x + "+b+" = "+(x+b);}
+  else if(t==="−"){b=rand(1,tiers(d,[12,20,30,40,55,80]));disp="x − "+b+" = "+(x-b);}
+  else{b=rand(2,tiers(d,[9,9,10,11,12,12]));disp=b+"x = "+(b*x);}
   return {type:"grid",qhtml:"Solve for x:  "+disp,answer:ans,
     hint:"Undo the operation on x by doing the opposite to both sides.",
     steps:[t==="×"?("Divide both sides by "+b):("Do the opposite of "+t+" "+b+" to both sides"),"x = "+ans]};};
-G.eq_two=(d)=>{const a=rand(2,d===1?5:9);const x=nz(d===1?8:12);const b=rand(1,d===1?10:20);const sign=pick([1,-1]);
+G.eq_two=(d)=>{const a=rand(2,tiers(d,[5,6,7,8,9,11]));const x=nz(tiers(d,[8,10,12,14,17,22]));const b=rand(1,tiers(d,[10,15,20,28,38,55]));const sign=pick([1,-1]);
   const c=a*x + sign*b;
   const disp=a+"x "+(sign>0?"+ "+b:"− "+b)+" = "+c;
   return {type:"grid",qhtml:"Solve for x:  "+disp,answer:x,
     hint:"Two steps: first undo the + or −, then undo the multiply by dividing.",
     steps:["Move the "+(sign>0?"+"+b:"−"+b)+": "+a+"x = "+(a*x),
            "Divide both sides by "+a+": x = "+x]};};
-G.eq_ineq=(d)=>{const a=rand(2,5);const x=rand(2,9);const b=rand(1,12);const c=a*x+b;
+G.eq_ineq=(d)=>{const a=rand(2,tiers(d,[5,5,6,7,8,9]));const x=rand(2,tiers(d,[9,10,12,14,17,22]));const b=rand(1,tiers(d,[12,15,20,25,30,40]));const c=a*x+b;
   return {type:"mc",qhtml:"Solve:  "+a+"x + "+b+" ≤ "+c,answer:"x ≤ "+x,
     ...mc("x ≤ "+x,["x ≥ "+x,"x ≤ "+(x+1),"x ≤ "+(x-1),"x < "+x]),
     hint:"Solve it like an equation. The inequality sign only flips if you ×/÷ by a negative.",
     steps:["Subtract "+b+": "+a+"x ≤ "+(a*x),"Divide by "+a+": x ≤ "+x]};};
 
 /* Ratios & Proportions ---------------------------------------------------*/
-G.rp_unit=(d)=>{const per=rand(2,9);const units=rand(3,d===1?8:12);const total=per*units;
+G.rp_unit=(d)=>{const per=rand(2,tiers(d,[9,10,12,13,15,18]));const units=rand(3,tiers(d,[8,10,12,13,15,18]));const total=per*units;
   const ctx=pick([["miles","hours","mph"],["words","minutes","words per minute"],["dollars","pounds","dollars per pound"],["pages","days","pages per day"]]);
   return {type:"grid",qhtml:total+" "+ctx[0]+" in "+units+" "+ctx[1]+". What is the unit rate ("+ctx[2]+")?",answer:per,
     hint:"Unit rate = divide the total by the number of units to get the amount for ONE.",
     steps:[total+" ÷ "+units+" = "+per+" "+ctx[2]]};};
-G.rp_prop=(d)=>{const k=rand(2,d===1?5:9);const b=rand(2,6);const dd=rand(2,7);const a=k*b;const x=k*dd;
+G.rp_prop=(d)=>{const k=rand(2,tiers(d,[5,6,7,8,9,11]));const b=rand(2,tiers(d,[6,6,7,8,9,10]));const dd=rand(2,tiers(d,[7,7,8,9,10,12]));const a=k*b;const x=k*dd;
   return {type:"grid",qhtml:"Solve the proportion:  "+a+"/"+b+" = x/"+dd,answer:x,
     hint:"Cross-multiply, then divide. Or find how the denominators relate.",
     steps:[a+" × "+dd+" = "+(a*dd),"Divide by "+b+": x = "+x]};};
-G.rp_ratio=(d)=>{const g=rand(2,6);const a=rand(1,6)*g,b=rand(1,6)*g;const[sa,sb]=simp(a,b);
+G.rp_ratio=(d)=>{const g=rand(2,tiers(d,[6,6,7,8,9,10]));const a=rand(1,6)*g,b=rand(1,6)*g;const[sa,sb]=simp(a,b);
   return {type:"mc",qhtml:"Simplify the ratio "+a+" : "+b,answer:sa+" : "+sb,
     ...mc(sa+" : "+sb,[sb+" : "+sa,(sa+1)+" : "+sb,sa+" : "+(sb+1),a+" : "+b]),
     hint:"Divide both numbers by their greatest common factor.",
     steps:["GCF of "+a+" and "+b+" is "+gcd(a,b),"→ "+sa+" : "+sb]};};
-G.rp_scale=(d)=>{const scale=rand(2,d===1?5:12);const real=rand(3,9);const draw=real*scale;
+G.rp_scale=(d)=>{const scale=rand(2,tiers(d,[5,7,9,12,15,20]));const real=rand(3,tiers(d,[9,10,12,14,17,22]));const draw=real*scale;
   return {type:"grid",qhtml:"A map scale is 1 cm = "+scale+" km. A road is "+draw+" km long. How many cm on the map?",answer:real,
     hint:"Divide the real distance by the scale factor to get the drawing length.",
     steps:[draw+" km ÷ "+scale+" km per cm = "+real+" cm"]};};
 
 /* Percents ---------------------------------------------------------------*/
-G.pc_of=(d)=>{const p=pick(d===1?[10,20,25,50]:[5,15,30,40,60,75]);const whole=rand(2,d===1?12:40)*(p===25||p===75?4:p===20||p===40||p===60?5:10);
+G.pc_of=(d)=>{const p=pick(Math.round(d)<=2?[10,20,25,50]:[5,15,30,40,60,75]);const whole=rand(2,tiers(d,[12,20,30,40,60,90]))*(p===25||p===75?4:p===20||p===40||p===60?5:10);
   const ans=whole*p/100;
   return {type:"grid",qhtml:"What is "+p+"% of "+whole+"?",answer:ans,
     hint:"Turn the percent into a decimal (÷100) and multiply, or use a known fraction like 25% = ¼.",
     steps:[p+"% = "+(p/100),"× "+whole+" = "+ans]};};
-G.pc_what=(d)=>{const whole=pick([20,40,60,80,100,200]);const p=pick([10,20,25,50]);const part=whole*p/100;
+G.pc_what=(d)=>{const whole=pick(tiers(d,[[20,40,60,80],[20,40,60,80,100],[20,40,60,80,100,200],[40,60,80,100,200],[60,80,100,200,400],[80,100,200,400,500]]));const p=pick([10,20,25,50]);const part=whole*p/100;
   return {type:"grid",qhtml:part+" is what percent of "+whole+"?",answer:p+"",
     hint:"Percent = part ÷ whole, then × 100.",
     steps:[part+" ÷ "+whole+" = "+(part/whole),"× 100 = "+p+"%"],answerLabel:"%"};};
-G.pc_change=(d)=>{const old=pick([20,40,60,80,100,200]);const p=pick([10,20,25,50]);const up=pick([1,-1]);
+G.pc_change=(d)=>{const old=pick(tiers(d,[[20,40,60,80],[20,40,60,80,100],[20,40,60,80,100,200],[40,60,80,100,200],[60,80,100,200,400],[80,100,200,400]]));const p=pick([10,20,25,50]);const up=pick([1,-1]);
   const nw=old+up*old*p/100;const ans=p;
   return {type:"grid",qhtml:"A price "+(up>0?"rose":"fell")+" from $"+old+" to $"+nw+". What is the percent "+(up>0?"increase":"decrease")+"?",answer:ans,
     hint:"Percent change = (amount of change ÷ original) × 100.",
     steps:["Change = "+Math.abs(nw-old),"÷ "+old+" = "+(Math.abs(nw-old)/old),"× 100 = "+ans+"%"],answerLabel:"%"};};
-G.pc_tax=(d)=>{const price=pick([20,25,40,50,60,80,100]);const p=pick([5,10,15,20,25]);const kind=pick([["tax","total cost"],["tip","total you pay"],["discount","sale price"]]);
+G.pc_tax=(d)=>{const price=pick(tiers(d,[[20,25,40,50],[20,25,40,50,60],[20,25,40,50,60,80],[20,25,40,50,60,80,100],[25,40,50,60,80,100],[40,50,60,80,100,120]]));const p=pick(Math.round(d)<=2?[5,10,15]:[5,10,15,20,25]);const kind=pick([["tax","total cost"],["tip","total you pay"],["discount","sale price"]]);
   let ans; if(kind[0]==="discount")ans=price - price*p/100; else ans=price + price*p/100;
   return {type:"grid",qhtml:"A $"+price+" item has a "+p+"% "+kind[0]+". What is the "+kind[1]+"?",answer:ans,
     hint:kind[0]==="discount"?"Find the discount amount, then SUBTRACT it from the price.":"Find the "+kind[0]+" amount, then ADD it to the price.",
     steps:[p+"% of "+price+" = "+(price*p/100),(kind[0]==="discount"?"Subtract from ":"Add to ")+price+" → $"+ans]};};
-G.pc_interest=(d)=>{const P=pick([100,200,300,400,500,1000]);const r=pick([2,3,4,5,10]);const t=rand(2,d===1?3:5);
+G.pc_interest=(d)=>{const P=pick(tiers(d,[[100,200],[100,200,300],[100,200,300,400,500],[100,200,300,500,1000],[200,300,500,1000],[300,500,1000,2000]]));const r=pick([2,3,4,5,10]);const t=rand(2,tiers(d,[3,3,4,4,5,6]));
   const ans=P*r/100*t;
   return {type:"grid",qhtml:"$"+P+" earns "+r+"% simple interest per year for "+t+" years. How much interest?",answer:ans,
     hint:"Simple interest I = Principal × rate × time (rate as a decimal).",
@@ -589,7 +589,7 @@ function freshState(){
   return {name:"",guide:"🦊",xp:0,streak:0,lastDay:null,daysActive:[],
     dailyGoal:30,todayXP:0,todayDate:null,todayMin:0,
     mastery:{},         // skillId -> 0..100
-    diff:{},            // skillId -> current difficulty 1..3
+    diff:{}, level:{}, seen:{},   // per-skill difficulty(1..6) + last-seen day
     attempts:0,correct:0,
     animals:[],         // indexes owned
     onboarded:false,placed:false};
@@ -598,7 +598,7 @@ function load(){ try{S=JSON.parse(localStorage.getItem(SKEY))||null;}catch(e){S=
   if(!S){S=freshState();}
   // fill defaults for new keys
   const f=freshState(); for(const k in f){ if(S[k]===undefined)S[k]=f[k]; }
-  ALLSKILLS.forEach(s=>{ if(S.mastery[s.id]===undefined)S.mastery[s.id]=0; if(S.diff[s.id]===undefined)S.diff[s.id]=1; });
+  ALLSKILLS.forEach(s=>{ if(S.mastery[s.id]===undefined)S.mastery[s.id]=0; if(S.diff[s.id]===undefined)S.diff[s.id]=1; if(S.seen[s.id]===undefined)S.seen[s.id]=null; if(S.level[s.id]===undefined)S.level[s.id]=({1:1,2:3,3:5}[Math.round(S.diff[s.id])]||1); });
   rolloverDay();
 }
 function save(){ try{localStorage.setItem(SKEY,JSON.stringify(S));}catch(e){} }
@@ -664,6 +664,9 @@ function viewMap(){
   if(!S.placed){ var pb=el("div","goalcard"); pb.style.cssText="background:linear-gradient(120deg,#fff2e0,#ffe6cf);cursor:pointer";
     pb.innerHTML='<div style="font-size:36px">🎯</div><div class="txt"><b>Take the Placement Check</b><p>A quick ~10-question check to find exactly where you should start. ~5 minutes.</p></div>';
     pb.onclick=function(){ startPlacement(); }; w.appendChild(pb); }
+  if(S.placed){ var dm=el("div","goalcard"); dm.style.cssText="background:linear-gradient(120deg,#e9f7ef,#dff3ea);cursor:pointer";
+    dm.innerHTML='<div style="font-size:34px">🏋️</div><div class="txt"><b>Daily Warm-Up</b><p>A smart mix — a couple of review reps plus your current focus. Best place to start each day.</p></div>';
+    dm.onclick=function(){ startDailyMix(); }; w.appendChild(dm); }
 
   ZONES.forEach((z,i)=>{
     const unlocked=zoneUnlocked(i);
@@ -713,7 +716,7 @@ function viewZone(zid){
   z.skills.forEach(s=>{
     const m=S.mastery[s.id];
     const r=el("div","zone");
-    r.innerHTML='<div class="emoji" style="font-size:16px;font-weight:800;color:var(--green-d)">'+m+'%</div>'+
+    r.innerHTML='<div class="emoji" style="font-size:14px;font-weight:800;color:var(--green-d);flex-direction:column;line-height:1.15">Lv '+Math.round(baseLevel(s.id))+'<span style="font-size:9px;color:var(--muted)">'+m+'%</span></div>'+
       '<div class="zi"><h3 style="font-size:15px">'+s.name+'</h3>'+
       '<div class="pbar" style="margin-top:6px"><i style="width:'+m+'%"></i></div></div>'+
       '<div class="go" style="background:var(--sky);box-shadow:0 4px 0 #3aa9cb">▶</div>';
@@ -787,20 +790,40 @@ function viewMe(){
 
 /* ---------------- SESSION ENGINE ---------------- */
 let sess=null;
+function sessionPlan(n){var a=[];for(var i=0;i<n;i++){a.push(i<2?'warm':(i>=n-1?'cool':'work'));}return a;}
+function baseLevel(sid){return Math.max(S.level[sid]||1,(S.mastery[sid]>=50?2.5:1));}
+function effLevel(sid,phase){var b=baseLevel(sid);if(sess&&sess.coach)return Math.max(1,b-2);if(phase==='warm')return Math.max(1,b-1.5);if(phase==='cool')return Math.max(1,b-0.8);return b;}
 function startSession(skillIds,label){
   sess={skills:skillIds,label:label,i:0,total:8,correctCount:0,xpEarned:0,
-        startT:Date.now(),cur:null,answered:false,selected:null,hintShown:false,newAnimals:[]};
+        startT:Date.now(),cur:null,answered:false,selected:null,hintShown:false,newAnimals:[],
+        wrongStreak:0,coach:false,leveledUp:[],lastXp:0,justLeveled:false,phaseFor:sessionPlan(8)};
   nextQ();
   renderPractice();
 }
+function startDailyMix(){
+  var t=today(),frontier=null;
+  for(var i=0;i<ZONES.length;i++){ if(zoneUnlocked(i)&&zoneMastery(ZONES[i].id)<100){frontier=ZONES[i];break;} }
+  if(!frontier)frontier=ZONES[0];
+  var set=frontier.skills.map(function(s){return s.id;});
+  var review=[];
+  ALLSKILLS.forEach(function(s){ if(zoneUnlocked(ZOFF[s.zone])&&s.zone!==frontier.id&&(S.mastery[s.id]||0)>0&&(S.mastery[s.id]||0)<85&&S.seen[s.id]!==t)review.push(s.id); });
+  review=shuffle(review).slice(0,2);
+  startSession(review.concat(set),"Daily Warm-Up");
+}
 function nextQ(){
-  const sid=pick(sess.skills);
+  var phase=(sess.phaseFor&&sess.phaseFor[sess.i])||'work';
+  var sid;
+  if(sess.skills.length>1 && Math.random()<0.6){
+    sid=sess.skills.slice().sort(function(a,b){return (S.mastery[a]||0)-(S.mastery[b]||0);})[0];
+  } else { sid=pick(sess.skills); }
   const skill=ALLSKILLS.find(s=>s.id===sid);
   let q;
-  if(skill.gen){ q=skill.gen(S.diff[sid]||1); }
+  if(skill.gen){ q=skill.gen(effLevel(sid,phase)); }
   else { q=pick(BANKS[skill.bank]); q=JSON.parse(JSON.stringify(q)); }
-  q.skillId=sid; q.skillName=skill.name;
-  sess.cur=q; sess.answered=false; sess.selected=null; sess.hintShown=false;
+  q.skillId=sid; q.skillName=skill.name; q.phase=phase;
+  sess.cur=q; sess.answered=false; sess.selected=null;
+  sess.hintShown = sess.coach ? true : false;
+  S.seen[sid]=today();
 }
 function renderPractice(){
   app.innerHTML="";
@@ -872,19 +895,21 @@ function checkAnswer(val){
   const q=sess.cur; const ok=isCorrect(val,q);
   sess.answered=true;
   S.attempts++; if(ok)S.correct++;
-  // mastery + difficulty adjust
-  const sid=q.skillId;
+  const sid=q.skillId; var before=Math.floor(S.level[sid]||1); sess.justLeveled=false;
   if(ok){
     let gain=sess.hintShown?6:10;
-    S.mastery[sid]=Math.min(100,S.mastery[sid]+gain);
+    S.mastery[sid]=Math.min(100,(S.mastery[sid]||0)+gain);
     sess.correctCount++;
-    let xp=(S.diff[sid]||1)*3 + (sess.hintShown?0:2);
-    sess.xpEarned+=xp;
-    // bump difficulty if doing well
-    if(!sess.hintShown && S.diff[sid]<3 && Math.random()<0.5) S.diff[sid]++;
+    let lv=Math.round(baseLevel(sid));
+    let xp=lv*2+(sess.hintShown?0:3); sess.lastXp=xp; sess.xpEarned+=xp;
+    S.level[sid]=Math.min(6,(S.level[sid]||1)+(sess.hintShown?0.08:0.22));
+    if(Math.floor(S.level[sid])>before){ sess.justLeveled=true; if(sess.leveledUp.indexOf(q.skillName)<0) sess.leveledUp.push(q.skillName); }
+    sess.wrongStreak=0; sess.coach=false;
   } else {
-    S.mastery[sid]=Math.max(0,S.mastery[sid]-4);
-    if(S.diff[sid]>1) S.diff[sid]--;
+    S.mastery[sid]=Math.max(0,(S.mastery[sid]||0)-4);
+    S.level[sid]=Math.max(1,(S.level[sid]||1)-0.5);
+    sess.lastXp=0; sess.wrongStreak=(sess.wrongStreak||0)+1;
+    if(sess.wrongStreak>=3){ sess.coach=true; S.level[sid]=Math.max(1,(S.level[sid]||1)-0.6); }
   }
   save();
   renderPractice();
@@ -892,9 +917,11 @@ function checkAnswer(val){
 function feedbackBar(q){
   const ok=isCorrect(sess.selected,q);
   const fb=el("div","fbbar "+(ok?"good":"bad"));
-  const msgs=ok?["Nice work!","You got it!","Boom! ⭐️","Correct!","Sharp!"]:["Not quite","Almost!","Let's learn this one"];
-  let html='<div class="row"><div class="ic">'+(ok?"🎉":"💪")+'</div><div class="msg"><b>'+pick(msgs)+'</b>'+
-    (ok?'<small>+'+((S.diff[q.skillId]||1)*3)+' stars</small>':'<small>Correct answer: '+q.answer+(q.answerLabel||'')+'</small>')+'</div></div>';
+  var title = ok ? pick(["Nice work!","You got it!","Boom! ⭐️","Correct!","Sharp!"])
+                 : (sess.coach ? "Let's slow down 💛" : pick(["Not quite","Almost!","Let's learn this one"]));
+  var sub = ok ? ('+'+(sess.lastXp||0)+' stars'+(sess.justLeveled?' · ⬆️ Level up!':''))
+              : (sess.coach ? "No worries — the next one comes with a walkthrough." : ("Correct answer: "+q.answer+(q.answerLabel||'')));
+  let html='<div class="row"><div class="ic">'+(ok?"🎉":(sess.coach?"🧭":"💪"))+'</div><div class="msg"><b>'+title+'</b><small>'+sub+'</small></div></div>';
   if(!ok && q.steps){ html+='<div class="steps">'+q.steps.map(s=>'<div>→ '+s+'</div>').join('')+'</div>'; }
   fb.innerHTML=html;
   const cont=el("button","btn"+(ok?"":" orange"), sess.i+1>=sess.total?"Finish ✓":"Continue →");
@@ -951,6 +978,8 @@ function renderSummary(early){
     '<div class="statbox"><b>'+S.streak+'</b><small>🔥 streak</small></div>'+
     '<div class="statbox"><b>Lvl '+level()+'</b><small>level</small></div></div>';
   c.appendChild(box);
+  if(sess.leveledUp&&sess.leveledUp.length){ var lu=el("div","card"); lu.style.cssText="background:linear-gradient(120deg,#eafff4,#e2f7ec)";
+    lu.innerHTML='<div style="font-weight:900;font-size:15px;color:var(--green-d)">⬆️ Leveled up!</div><div style="color:var(--ink);font-weight:650;font-size:13.5px;margin-top:4px">Tougher problems unlocked in: '+sess.leveledUp.join(', ')+'</div>'; c.appendChild(lu); }
   if(sess.newAnimals&&sess.newAnimals.length){
     const n=sess.newAnimals.map(i=>ANIMALS[i]);
     const ac=el("div","card");
